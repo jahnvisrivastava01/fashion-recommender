@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Female Fashion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>👗 Female Fashion</h1>
+    <div id="selection-area"></div>
+    <button onclick="getRecommendations()">Get Recommendations</button>
+    <div id="results"></div>
+  </div>
+  <script>
+    let gender = "female";
+    async function loadOptions() {
+      const res = await fetch(`http://127.0.0.1:5000/get-options/${gender}`);
+      const data = await res.json();
+      const area = document.getElementById("selection-area");
+      area.innerHTML = "";
+      Object.entries(data).forEach(([cat, items]) => {
+        const sel = document.createElement("select");
+        sel.id = cat;
+        sel.innerHTML = `<option value="">Select ${cat}</option>` + items.map(i=>`<option value="${i}">${i}</option>`).join("");
+        area.appendChild(sel);
+      });
+    }
+
+    async function getRecommendations() {
+      const selects = document.querySelectorAll("#selection-area select");
+      const selections = {};
+      selects.forEach(s=>{ if(s.value) selections[s.id] = s.value; });
+      const res = await fetch("http://127.0.0.1:5000/recommend", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({gender, selections})
+      });
+      const data = await res.json();
+      document.getElementById("results").innerHTML =
+        `<h3>Recommended Items:</h3><ul>${data.recommended_items.map(i=>`<li>${i}</li>`).join("")}</ul>`;
+    }
+
+    loadOptions();
+  </script>
+</body>
+</html>
